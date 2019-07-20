@@ -1,0 +1,4 @@
+build/
+firmware/
+config.h
+.vscode/browse.vc.*

@@ -1,0 +1,47 @@
+{
+  "configurations": [
+    {
+      "name": "Linux",
+      "includePath": [
+        "${env:SDK_PATH}/../esp-open-sdk/xtensa-lx106-elf/xtensa-lx106-elf/sysroot/usr/include",
+        "${env:SDK_PATH}/../esp-open-sdk/xtensa-lx106-elf/lib/gcc/xtensa-lx106-elf/4.8.5/include",
+        "${env:SDK_PATH}/../esp-open-sdk/esp-open-lwip/include",
+        "${env:SDK_PATH}/bootloader",
+        "${env:SDK_PATH}/core/include",
+        "${env:SDK_PATH}/include",
+        "${env:SDK_PATH}/include/espressif/esp8266",
+        "${env:SDK_PATH}/extras",
+        "${env:SDK_PATH}/lwip",
+        "${env:SDK_PATH}/open_esplibs/include",
+        "${env:SDK_PATH}/FreeRTOS/Source/include",
+        "${env:SDK_PATH}/FreeRTOS/Source/portable/esp8266",
+        "${workspaceFolder}/**"
+      ],
+      "defines": [],
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "c11",
+      "cppStandard": "c++17",
+      "intelliSenseMode": "gcc-x64",
+      "browse": {
+        "path": [
+          "${env:SDK_PATH}/../esp-open-sdk/xtensa-lx106-elf/xtensa-lx106-elf/sysroot/usr/include",
+          "${env:SDK_PATH}/../esp-open-sdk/xtensa-lx106-elf/lib/gcc/xtensa-lx106-elf/4.8.5/include",
+          "${env:SDK_PATH}/../esp-open-sdk/esp-open-lwip/include",
+          "${env:SDK_PATH}/bootloader",
+          "${env:SDK_PATH}/core/include",
+          "${env:SDK_PATH}/include",
+          "${env:SDK_PATH}/include/espressif/esp8266",
+          "${env:SDK_PATH}/extras",
+          "${env:SDK_PATH}/lwip",
+          "${env:SDK_PATH}/open_esplibs/include",
+          "${env:SDK_PATH}/FreeRTOS/Source/include",
+          "${env:SDK_PATH}/FreeRTOS/Source/portable/esp8266",
+          "${workspaceRoot}"
+        ],
+        "limitSymbolsToIncludedHeaders": true,
+        "databaseFilename": "${workspaceRoot}/.vscode/browse.vc.db"
+      }
+    }
+  ],
+  "version": 4
+}

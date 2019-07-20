@@ -1,0 +1,35 @@
+{
+  "files.associations": {
+    "uart.h": "c",
+    "libmain.h": "c",
+    "type_traits": "cpp",
+    "typeinfo": "c",
+    "ir.h": "c",
+    "time.h": "c",
+    "raw.h": "c",
+    "freertos.h": "c",
+    "stdio.h": "c",
+    "esp_common.h": "c",
+    "esp_sta.h": "c",
+    "esp_misc.h": "c",
+    "ip_addr.h": "c",
+    "homekit.h": "c",
+    "homekit_config.h": "c",
+    "etstimer.h": "c",
+    "homekit_callback.h": "c",
+    "esp_system.h": "c",
+    "esp_wifi.h": "c",
+    "esp8266.h": "c",
+    "stddef.h": "c",
+    "portable.h": "c"
+  },
+  "files.exclude": {
+    "**/.git": true,
+    "**/.DS_Store": true,
+    "build": true,
+    "firmware": true
+  },
+  "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: LLVM, ColumnLimit: 80, IndentWidth: 2, ContinuationIndentWidth: 2, ConstructorInitializerIndentWidth: 2, TabWidth: 2, UseTab: Never }",
+  "C_Cpp.intelliSenseEngine": "Default",
+  "C_Cpp.default.intelliSenseMode": "gcc-x64"
+}
