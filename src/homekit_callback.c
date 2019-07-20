@@ -44,16 +44,19 @@ void ac_active_set(homekit_value_t value) {
 
   ac_active.value = value;
   AC.active = value.bool_value;
+  AC.swing = false; // Swing mode is always reset to false
 
   ir_ac_power();
 };
 
-homekit_value_t target_temperature_get() {
+homekit_value_t ac_target_temperature_get() {
   return HOMEKIT_FLOAT(AC.targetTemperature);
 };
-void target_temperature_set(homekit_value_t value) {
+void ac_target_temperature_set(homekit_value_t value) {
   if (!AC.active) {
     printf("Can't change temperature while AC is off\n");
+    homekit_characteristic_notify(&target_temperature,
+                                  target_temperature.value);
     return;
   }
 
@@ -63,7 +66,9 @@ void target_temperature_set(homekit_value_t value) {
   int times = abs(diff);
   if ((xTaskGetTickCount() - AC.lastTargetTempChange) * portTICK_PERIOD_MS >=
       5000) {
-    times++;
+    times++; // If last temperature change > 5 seconds from now, the first temp
+             // up/down key will not change the temperature, only display
+             // temperature on AC so we need to add one more time.
   }
   for (int i = 0; i < times; i++) {
     if (diff > 0) {
@@ -79,7 +84,44 @@ void target_temperature_set(homekit_value_t value) {
   target_temperature.value = value;
 };
 
-homekit_value_t fan_active_get() { return HOMEKIT_UINT8(FAN.active); };
+homekit_value_t ac_swing_get() { return HOMEKIT_UINT8(AC.swing); }
+void ac_swing_set(homekit_value_t value) {
+  AC.swing = value.bool_value;
+  ac_swing_mode.value = value;
+  if (value.bool_value) {
+    ir_ac_swing_enable();
+  } else {
+    ir_ac_swing_disable();
+  }
+}
+
+uint8_t speed_adjust_table[4][4] = {
+  {0, 0, 0, 0}, {0, 0, 1, 2}, {0, 3, 0, 1}, {0, 2, 3, 0}};
+
+homekit_value_t ac_speed_get() { return HOMEKIT_FLOAT(AC.rotationSpeed); }
+
+void ac_speed_set(homekit_value_t value) {
+  if (value.float_value > 0 && // prevent losing state from power off
+      value.float_value <= 4 && AC.active) {
+
+    int times =
+      speed_adjust_table[(int)AC.rotationSpeed][(int)value.float_value];
+
+    for (int i = 0; i < times; i++) {
+      ir_ac_wind_speed();
+      vTaskDelay(250 / portTICK_PERIOD_MS);
+    }
+
+    ac_rotation_speed.value = value;
+    AC.rotationSpeed = value.float_value;
+  } else {
+    ac_rotation_speed.value = HOMEKIT_FLOAT(AC.rotationSpeed);
+    homekit_characteristic_notify(&ac_rotation_speed, ac_rotation_speed.value);
+  }
+}
+
+homekit_value_t fan_active_get() { return HOMEKIT_UINT8(FAN.active); }
+
 void fan_active_set(homekit_value_t value) {
   if (FAN.active == value.bool_value)
     return;
@@ -88,7 +130,31 @@ void fan_active_set(homekit_value_t value) {
   FAN.active = value.bool_value;
 
   ir_fan_power();
-};
+}
+
+homekit_value_t fan_speed_get() { return HOMEKIT_FLOAT(FAN.rotationSpeed); }
+
+void fan_speed_set(homekit_value_t value) {
+  printf("FAN roation speed set: %f\n", value.float_value);
+  if (value.float_value > 0 && // prevent losing state from power off
+      value.float_value <= 4 && FAN.active) {
+
+    int times =
+      speed_adjust_table[(int)FAN.rotationSpeed][(int)value.float_value];
+
+    for (int i = 0; i < times; i++) {
+      ir_fan_rotation_speed();
+      vTaskDelay(1100 / portTICK_PERIOD_MS);
+    }
+
+    fan_rotation_speed.value = value;
+    FAN.rotationSpeed = value.float_value;
+  } else {
+    fan_rotation_speed.value = HOMEKIT_FLOAT(FAN.rotationSpeed);
+    homekit_characteristic_notify(&fan_rotation_speed,
+                                  fan_rotation_speed.value);
+  }
+}
 
 void temperature_sensor_task(void *_args) {
   gpio_set_pullup(TEMPERATURE_SENSOR_GPIO, false, false);
@@ -98,7 +164,7 @@ void temperature_sensor_task(void *_args) {
     bool success = dht_read_float_data(DHT_TYPE_DHT22, TEMPERATURE_SENSOR_GPIO,
                                        &humidity_value, &temperature_value);
     if (success) {
-      printf("Got readings: temperature %g, humidity %g\n", temperature_value,
+      printf("[DHT22] temperature %g℃, humidity %g％\n", temperature_value,
              humidity_value);
       current_temperature.value = HOMEKIT_FLOAT(temperature_value);
       current_humidity.value = HOMEKIT_FLOAT(humidity_value);
@@ -109,15 +175,11 @@ void temperature_sensor_task(void *_args) {
 
       /* INACTIVE = 0; IDLE = 1; HEATING = 2; COOLING = 3; */
       homekit_value_t new_state_value = HOMEKIT_UINT8(0);
-      printf("ac state: %d, target temp: %g\n", AC.active,
-             AC.targetTemperature);
+
       if (AC.active) {
-        printf("ac state: active\n");
         if (AC.targetTemperature > current_temperature.value.float_value) {
-          printf("ac state: idle\n");
           new_state_value = HOMEKIT_UINT8(1);
         } else {
-          printf("ac state: cooling\n");
           new_state_value = HOMEKIT_UINT8(3);
         }
       }

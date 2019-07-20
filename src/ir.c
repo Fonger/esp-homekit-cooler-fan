@@ -1,5 +1,9 @@
+#include <FreeRTOS.h>
+#include <esp/uart.h>
+#include <esp8266.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <task.h>
 
 #include "homekit_config.h"
 #include "ir.h"
@@ -28,7 +32,7 @@ int16_t AC_TEMP_UP[] = {
   562,  -562,  562, -1688, 562, -562,  562, -1688, 562, -562,  562, -1688,
   562,  -1688, 562, -1688, 562, -1688, 562};
 
-int16_t AC_ROTATION_SPEED[] = {
+int16_t AC_WIND_SPEED[] = {
   9000, -4500, 562, -562,  562, -562,  562, -562,  562, -562,  562, -562,
   562,  -562,  562, -562,  562, -1688, 562, -1688, 562, -1688, 562, -1688,
   562,  -1688, 562, -1688, 562, -1688, 562, -1688, 562, -1688, 562, -1688,
@@ -101,12 +105,12 @@ void ir_init() {
 void ir_ac_power() { IR_SEND(AC_POWER); }
 void ir_ac_temp_up() { IR_SEND(AC_TEMP_UP); }
 void ir_ac_temp_down() { IR_SEND(AC_TEMP_DOWN); }
-void ir_ac_wind_speed() { IR_SEND(AC_TEMP_DOWN); }
-void ir_ac_swing_enable() { IR_SEND(AC_TEMP_DOWN); }
-void ir_ac_swing_disable() { IR_SEND(AC_TEMP_DOWN); }
+void ir_ac_wind_speed() { IR_SEND(AC_WIND_SPEED); }
+void ir_ac_swing_enable() { IR_SEND(AC_SWING_ENABLE); }
+void ir_ac_swing_disable() { IR_SEND(AC_SWING_DISABLE); }
 
-void ir_fan_power() { IR_SEND(AC_TEMP_DOWN); }
-void ir_fan_rotation_speed() { IR_SEND(AC_TEMP_DOWN); }
+void ir_fan_power() { IR_SEND(FAN_POWER); }
+void ir_fan_rotation_speed() { IR_SEND(FAN_ROTATION_SPEED); }
 
 void ir_dump_task(void *arg) {
   ir_decoder_t *raw_decoder = ir_raw_make_decoder();

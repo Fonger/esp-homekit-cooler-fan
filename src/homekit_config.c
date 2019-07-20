@@ -6,11 +6,11 @@
 #include "homekit_config.h"
 
 ac_state_t AC = {.active = false,
-                 .rotationSpeed = 33,
+                 .rotationSpeed = 1,
                  .swing = false,
                  .targetTemperature = DEFAULT_COOLER_TEMPERATURE,
                  .lastTargetTempChange = 0};
-fan_state_t FAN = {.active = false, .rotationSpeed = 33};
+fan_state_t FAN = {.active = false, .rotationSpeed = 1};
 
 bool homekit_initialized = false;
 
@@ -22,7 +22,7 @@ homekit_characteristic_t target_temperature = HOMEKIT_CHARACTERISTIC_(
   COOLING_THRESHOLD_TEMPERATURE, DEFAULT_COOLER_TEMPERATURE,
   .min_value = (float[]){MIN_COOLER_TEMPERATURE},
   .max_value = (float[]){MAX_COOLER_TEMPERATURE}, .min_step = (float[]){1},
-  .getter = target_temperature_get, .setter = target_temperature_set);
+  .getter = ac_target_temperature_get, .setter = ac_target_temperature_set);
 homekit_characteristic_t units =
   HOMEKIT_CHARACTERISTIC_(TEMPERATURE_DISPLAY_UNITS, 0);
 homekit_characteristic_t current_heater_cooler_state =
@@ -39,16 +39,17 @@ homekit_characteristic_t target_heater_cooler_state =
 
 homekit_characteristic_t ac_active = HOMEKIT_CHARACTERISTIC_(
   ACTIVE, 0, .getter = ac_active_get, .setter = ac_active_set);
-homekit_characteristic_t ac_rotation_speed =
-  HOMEKIT_CHARACTERISTIC_(ROTATION_SPEED, 0);
-homekit_characteristic_t ac_swing_mode = HOMEKIT_CHARACTERISTIC_(SWING_MODE, 0);
+homekit_characteristic_t ac_rotation_speed = HOMEKIT_CHARACTERISTIC_(
+  ROTATION_SPEED, 1, .min_value = (float[]){0}, .max_value = (float[]){3},
+  .getter = ac_speed_get, .setter = ac_speed_set);
+homekit_characteristic_t ac_swing_mode = HOMEKIT_CHARACTERISTIC_(
+  SWING_MODE, 0, .getter = ac_swing_get, .setter = ac_swing_set);
 
 homekit_characteristic_t fan_active = HOMEKIT_CHARACTERISTIC_(
   ACTIVE, 0, .getter = fan_active_get, .setter = fan_active_set);
-homekit_characteristic_t fan_rotation_speed =
-  HOMEKIT_CHARACTERISTIC_(ROTATION_SPEED, 0);
-homekit_characteristic_t fan_swing_mode =
-  HOMEKIT_CHARACTERISTIC_(SWING_MODE, 0);
+homekit_characteristic_t fan_rotation_speed = HOMEKIT_CHARACTERISTIC_(
+  ROTATION_SPEED, 1, .min_value = (float[]){0}, .max_value = (float[]){3},
+  .getter = fan_speed_get, .setter = fan_speed_set);
 
 homekit_accessory_t *homekit_accessories[] = {
   HOMEKIT_ACCESSORY(
@@ -98,8 +99,7 @@ homekit_accessory_t *homekit_accessories[] = {
                           .characteristics =
                             (homekit_characteristic_t *[]){
                               HOMEKIT_CHARACTERISTIC(NAME, "電風扇"),
-                              &fan_active, &fan_rotation_speed, &fan_swing_mode,
-                              NULL}),
+                              &fan_active, &fan_rotation_speed, NULL}),
           NULL}),
   NULL};
 ;
