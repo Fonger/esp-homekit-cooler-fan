@@ -10,6 +10,7 @@ EXTRA_COMPONENTS = \
 	$(abspath components/homekit)
 
 FLASH_SIZE ?= 32
+ESPBAUD = 921600
 
 EXTRA_CFLAGS += -I../.. -DHOMEKIT_SHORT_APPLE_UUIDS
 

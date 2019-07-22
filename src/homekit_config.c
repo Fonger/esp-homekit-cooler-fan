@@ -104,4 +104,5 @@ homekit_accessory_t *homekit_accessories[] = {
   NULL};
 ;
 homekit_server_config_t homekit_config = {.accessories = homekit_accessories,
-                                          .password = HOMEKIT_PASSWORD};
+                                          .password = HOMEKIT_PASSWORD,
+                                          .on_event = on_homekit_event};

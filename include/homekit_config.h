@@ -21,6 +21,8 @@ void led_write(bool on);
 
 extern ac_state_t AC;
 extern fan_state_t FAN;
+
+void on_homekit_event(homekit_event_t event);
 extern bool homekit_initialized;
 
 extern homekit_characteristic_t current_humidity;
