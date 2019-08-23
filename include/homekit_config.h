@@ -17,13 +17,20 @@ typedef struct fan_state_struct {
   float rotationSpeed;
 } fan_state_t;
 
+typedef struct light_state_struct {
+  bool on;
+} light_state_t;
+
 void led_write(bool on);
 
 extern ac_state_t AC;
 extern fan_state_t FAN;
+extern light_state_t LIGHT;
 
 void on_homekit_event(homekit_event_t event);
 extern bool homekit_initialized;
+
+extern homekit_characteristic_t light_on;
 
 extern homekit_characteristic_t current_humidity;
 extern homekit_characteristic_t current_temperature;
@@ -38,6 +45,6 @@ extern homekit_characteristic_t ac_swing_mode;
 
 extern homekit_characteristic_t fan_active;
 extern homekit_characteristic_t fan_rotation_speed;
-extern homekit_characteristic_t fan_swing_mode;
+extern homekit_characteristic_t fan_light_level;
 
 extern homekit_server_config_t homekit_config;

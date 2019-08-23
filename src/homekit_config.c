@@ -11,6 +11,7 @@ ac_state_t AC = {.active = false,
                  .targetTemperature = DEFAULT_COOLER_TEMPERATURE,
                  .lastTargetTempChange = 0};
 fan_state_t FAN = {.active = false, .rotationSpeed = 1};
+light_state_t LIGHT = {.on = false};
 
 bool homekit_initialized = false;
 
@@ -50,10 +51,37 @@ homekit_characteristic_t fan_active = HOMEKIT_CHARACTERISTIC_(
 homekit_characteristic_t fan_rotation_speed = HOMEKIT_CHARACTERISTIC_(
   ROTATION_SPEED, 1, .min_value = (float[]){0}, .max_value = (float[]){3},
   .getter = fan_speed_get, .setter = fan_speed_set);
+/*homekit_characteristic_t fan_light_level =
+  HOMEKIT_CHARACTERISTIC_(CURRENT_AMBIENT_LIGHT_LEVEL, MIN_LIGHT_SENSOR_LUX,
+                          .min_value = (float[]){MIN_LIGHT_SENSOR_LUX},
+                          .max_value = (float[]){MAX_LIGHT_SENSOR_LUX});*/
+
+homekit_characteristic_t light_on = HOMEKIT_CHARACTERISTIC_(
+  ON, false, .getter = light_on_get, .setter = light_on_set);
 
 homekit_accessory_t *homekit_accessories[] = {
   HOMEKIT_ACCESSORY(
-      .id = 1, .category = homekit_accessory_category_air_conditioner,
+      .id = 1, .category = homekit_accessory_category_lightbulb,
+      .services =
+        (homekit_service_t *[]){
+          HOMEKIT_SERVICE(
+            ACCESSORY_INFORMATION,
+            .characteristics =
+              (homekit_characteristic_t *[]){
+                HOMEKIT_CHARACTERISTIC(NAME, "Light Switch"),
+                HOMEKIT_CHARACTERISTIC(MANUFACTURER, "Fonger"),
+                HOMEKIT_CHARACTERISTIC(SERIAL_NUMBER, "12345678"),
+                HOMEKIT_CHARACTERISTIC(MODEL, "SONGLE 5V Relay"),
+                HOMEKIT_CHARACTERISTIC(FIRMWARE_REVISION, "0.0.1"),
+                HOMEKIT_CHARACTERISTIC(IDENTIFY, ac_identify), NULL}),
+          HOMEKIT_SERVICE(
+            LIGHTBULB, .primary = true,
+            .characteristics =
+              (homekit_characteristic_t *[]){
+                HOMEKIT_CHARACTERISTIC(NAME, "大燈"), &light_on, NULL}),
+          NULL}),
+  HOMEKIT_ACCESSORY(
+      .id = 2, .category = homekit_accessory_category_air_conditioner,
       .services =
         (homekit_service_t *[]){
           HOMEKIT_SERVICE(
@@ -74,15 +102,15 @@ homekit_accessory_t *homekit_accessories[] = {
                               &current_heater_cooler_state,
                               &target_heater_cooler_state, &units,
                               &ac_rotation_speed, &ac_swing_mode, NULL}),
-          HOMEKIT_SERVICE(
-            HUMIDITY_SENSOR,
-            .characteristics =
-              (homekit_characteristic_t *[]){
-                HOMEKIT_CHARACTERISTIC(NAME, "濕度"), &current_humidity,
-                HOMEKIT_CHARACTERISTIC(ACTIVE, 1), NULL}),
+          HOMEKIT_SERVICE(HUMIDITY_SENSOR,
+                          .characteristics =
+                            (homekit_characteristic_t *[]){
+                              HOMEKIT_CHARACTERISTIC(NAME, "濕度"),
+                              &current_humidity,
+                              HOMEKIT_CHARACTERISTIC(ACTIVE, 1), NULL}),
           NULL}),
   HOMEKIT_ACCESSORY(
-      .id = 2, .category = homekit_accessory_category_fan,
+      .id = 3, .category = homekit_accessory_category_fan,
       .services =
         (homekit_service_t *[]){
           HOMEKIT_SERVICE(
@@ -100,6 +128,11 @@ homekit_accessory_t *homekit_accessories[] = {
                             (homekit_characteristic_t *[]){
                               HOMEKIT_CHARACTERISTIC(NAME, "電風扇"),
                               &fan_active, &fan_rotation_speed, NULL}),
+          /*HOMEKIT_SERVICE(LIGHT_SENSOR, .primary = false,
+                          .characteristics =
+                            (homekit_characteristic_t *[]){
+                              HOMEKIT_CHARACTERISTIC(NAME, "光度計"),
+                              &fan_light_level, NULL}),*/
           NULL}),
   NULL};
 ;

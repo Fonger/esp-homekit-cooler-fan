@@ -10,6 +10,7 @@
 #include <homekit/characteristics.h>
 #include <homekit/homekit.h>
 #include <stdio.h>
+#include <sysparam.h>
 #include <task.h>
 
 #include "homekit_callback.h"
@@ -47,9 +48,16 @@ void init() {
   led_init();
   ir_init();
 
-  xTaskCreate(temperature_sensor_task, "TempSensor", 256, NULL, 2, NULL);
-  xTaskCreate(ir_dump_task, "IR dump", 4096, NULL, tskIDLE_PRIORITY, NULL);
+  xTaskCreate(temperature_sensor_task, "TempSensor", 256, NULL,
+              tskIDLE_PRIORITY, NULL);
+  xTaskCreate(update_display_task, "UpdateDisplay", 512, NULL, tskIDLE_PRIORITY,
+              NULL);
+  // xTaskCreate(ir_dump_task, "IR dump", 2048, NULL, tskIDLE_PRIORITY, NULL);
 
+  gpio_enable(RELAY_GPIO, GPIO_OUTPUT);
+  gpio_enable(BTN_GPIO, GPIO_INPUT);
+  xTaskCreate(button_poll_task, "ButtonPoll", 256, NULL, tskIDLE_PRIORITY,
+              NULL);
   homekit_initialized = true;
 }
 
@@ -61,6 +69,7 @@ void led_init() {
 void user_init(void) {
   uart_set_baud(0, 115200);
 
+  sysparam_set_string("hostname", "Fonger-Homekit");
   wifi_init();
   homekit_server_init(&homekit_config);
 

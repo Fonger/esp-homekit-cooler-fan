@@ -4,11 +4,19 @@
 #include <esplibs/libmain.h>
 #include <espressif/esp_system.h>
 #include <event_groups.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <task.h>
 
 #include <dht/dht.h>
+#include <ssd1306/ssd1306.h>
+
+#include "config.h"
+
+#include "fonts/fonts.h"
+#include <i2c/i2c.h>
 
 #include "homekit_callback.h"
 #include "homekit_config.h"
@@ -156,15 +164,24 @@ void fan_speed_set(homekit_value_t value) {
   }
 }
 
+/* Declare device descriptor */
+static const ssd1306_t dev = {.protocol = PROTOCOL,
+                              .i2c_dev.bus = I2C_BUS,
+                              .i2c_dev.addr = ADDR,
+                              .width = DISPLAY_WIDTH,
+                              .height = DISPLAY_HEIGHT};
+
+/* Local frame buffer */
+static uint8_t buffer[DISPLAY_WIDTH * DISPLAY_HEIGHT / 8];
+
 void temperature_sensor_task(void *_args) {
   gpio_set_pullup(TEMPERATURE_SENSOR_GPIO, false, false);
-
   float humidity_value, temperature_value;
   while (1) {
     bool success = dht_read_float_data(DHT_TYPE_DHT22, TEMPERATURE_SENSOR_GPIO,
                                        &humidity_value, &temperature_value);
     if (success) {
-      printf("[DHT22] temperature %g℃, humidity %g％\n", temperature_value,
+      printf("[DHT22] temperature %g°C, humidity %g%%\n", temperature_value,
              humidity_value);
       current_temperature.value = HOMEKIT_FLOAT(temperature_value);
       current_humidity.value = HOMEKIT_FLOAT(humidity_value);
@@ -191,10 +208,94 @@ void temperature_sensor_task(void *_args) {
                                       current_heater_cooler_state.value);
       }
 
-    } else {
-      printf("Couldn't read data from sensor\n");
-    }
+      /*
+ read light lux with photoresistor in A0
 
+ uint16_t raw_val = sdk_system_adc_read();
+ float ratio = ((float)1024 / (float)raw_val) - 1;
+
+ static unsigned long resistor = 1000;
+
+ unsigned long photocell_resistor = resistor * ratio;
+ float lux = 29634400 / (float)pow(photocell_resistor, 1.6689);
+ printf("[LIGHT] raw: %d / 1024 lux: %.3f\n", raw_val, lux);
+ if (lux < MIN_LIGHT_SENSOR_LUX)
+   lux = MIN_LIGHT_SENSOR_LUX;
+ if (lux > MAX_LIGHT_SENSOR_LUX)
+   lux = MAX_LIGHT_SENSOR_LUX;
+   fan_light_level.value = HOMEKIT_FLOAT(lux);
+   homekit_characteristic_notify(&fan_light_level, fan_light_level.value);
+ } else { printf("Couldn't read data from
+    sensor\n");
+ */
+    }
     vTaskDelay(TEMPERATURE_POLL_PERIOD / portTICK_PERIOD_MS);
+  }
+}
+
+void update_display_task(void *_args) {
+  char text[25];
+  const font_info_t *font =
+    font_builtin_fonts[FONT_FACE_TERMINUS_6X12_ISO8859_1];
+  const font_info_t *font_sm = font_builtin_fonts[FONT_FACE_GLCD5x7];
+
+  i2c_init(I2C_BUS, SCL_PIN, SDA_PIN, I2C_FREQ_400K);
+  while (ssd1306_init(&dev) != 0) {
+    printf("%s: failed to init SSD1306 lcd\n", __func__);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+  }
+  ssd1306_set_whole_display_lighting(&dev, false);
+
+  while (1) {
+
+    ssd1306_fill_rectangle(&dev, buffer, 0, 0, DISPLAY_WIDTH,
+                           DISPLAY_HEIGHT / 2, OLED_COLOR_BLACK);
+
+    sprintf(text, "Temperature %0.1f C", current_temperature.value.float_value);
+    ssd1306_draw_string(&dev, buffer, font, 0, 0, text, OLED_COLOR_WHITE,
+                        OLED_COLOR_BLACK);
+    sprintf(text, "Humidity    %0.1f %%", current_humidity.value.float_value);
+    ssd1306_draw_string(&dev, buffer, font, 0, 12, text, OLED_COLOR_WHITE,
+                        OLED_COLOR_BLACK);
+
+    if (AC.active) {
+      sprintf(text, "AC ON(%gC)", AC.targetTemperature);
+    } else {
+      sprintf(text, "AC OFF");
+    }
+    ssd1306_draw_string(&dev, buffer, font_sm, 0, 25, text, OLED_COLOR_WHITE,
+                        OLED_COLOR_BLACK);
+
+    if (FAN.active) {
+      sprintf(text, "FAN ON(%g)", FAN.rotationSpeed);
+    } else {
+      sprintf(text, "FAN OFF");
+    }
+    ssd1306_draw_string(&dev, buffer, font_sm, 64, 25, text, OLED_COLOR_WHITE,
+                        OLED_COLOR_BLACK);
+
+    if (ssd1306_load_frame_buffer(&dev, buffer)) {
+      printf("error print to ssd1306\n");
+    }
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+  }
+}
+
+homekit_value_t light_on_get() { return HOMEKIT_BOOL(LIGHT.on); };
+void light_on_set(homekit_value_t value) {
+  light_on.value = value;
+  LIGHT.on = value.bool_value;
+  gpio_write(RELAY_GPIO, LIGHT.on);
+};
+
+void button_poll_task(void *pvParameters) {
+  while (true) {
+    while (gpio_read(BTN_GPIO) == true) {
+      vTaskDelay(10 / portTICK_PERIOD_MS);
+    }
+    printf("button_press!\n");
+    light_on_set(HOMEKIT_BOOL(!LIGHT.on));
+    homekit_characteristic_notify(&light_on, light_on.value);
+    vTaskDelay(500 / portTICK_PERIOD_MS);
   }
 }

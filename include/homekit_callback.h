@@ -17,4 +17,10 @@ void fan_active_set(homekit_value_t value);
 homekit_value_t fan_speed_get();
 void fan_speed_set(homekit_value_t value);
 
+homekit_value_t light_on_get();
+void light_on_set(homekit_value_t value);
+
 void temperature_sensor_task(void *_args);
+void update_display_task(void *_args);
+
+void button_poll_task(void *pvParameters);

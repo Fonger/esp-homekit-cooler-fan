@@ -21,7 +21,8 @@
     "esp_wifi.h": "c",
     "esp8266.h": "c",
     "stddef.h": "c",
-    "portable.h": "c"
+    "portable.h": "c",
+    "dht.h": "c"
   },
   "files.exclude": {
     "**/.git": true,
@@ -31,5 +32,12 @@
   },
   "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: LLVM, ColumnLimit: 80, IndentWidth: 2, ContinuationIndentWidth: 2, ConstructorInitializerIndentWidth: 2, TabWidth: 2, UseTab: Never }",
   "C_Cpp.intelliSenseEngine": "Default",
-  "C_Cpp.default.intelliSenseMode": "gcc-x64"
+  "C_Cpp.default.intelliSenseMode": "gcc-x64",
+  "cquery.cacheDirectory": "${workspaceFolder}/.vscode/cquery_cached_index/",
+  "cSpell.words": [
+    "gpio",
+    "opmode",
+    "ssid",
+    "wifi"
+  ]
 }
