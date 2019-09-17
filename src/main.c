@@ -59,6 +59,10 @@ void led_init() {
 }
 
 void user_init(void) {
+  // for ir transmission gpio 14
+  // https://github.com/maximkulkin/esp-ir/issues/9
+  gpio_set_pullup(14, false, false);
+
   uart_set_baud(0, 115200);
 
   wifi_init();
