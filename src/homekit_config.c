@@ -102,7 +102,28 @@ homekit_accessory_t *homekit_accessories[] = {
                               &current_heater_cooler_state,
                               &target_heater_cooler_state, &units,
                               &ac_rotation_speed, &ac_swing_mode, NULL}),
-          HOMEKIT_SERVICE(HUMIDITY_SENSOR,
+          /*HOMEKIT_SERVICE(HUMIDITY_SENSOR,
+                          .characteristics =
+                            (homekit_characteristic_t *[]){
+                              HOMEKIT_CHARACTERISTIC(NAME, "濕度"),
+                              &current_humidity,
+                              HOMEKIT_CHARACTERISTIC(ACTIVE, 1), NULL}),*/
+          NULL}),
+  HOMEKIT_ACCESSORY(
+      .id = 3, .category = homekit_accessory_category_sensor,
+      .services =
+        (homekit_service_t *[]){
+          HOMEKIT_SERVICE(
+            ACCESSORY_INFORMATION,
+            .characteristics =
+              (homekit_characteristic_t *[]){
+                HOMEKIT_CHARACTERISTIC(NAME, "濕度"),
+                HOMEKIT_CHARACTERISTIC(MANUFACTURER, "ASAIR"),
+                HOMEKIT_CHARACTERISTIC(SERIAL_NUMBER, "SNK118230B040D"),
+                HOMEKIT_CHARACTERISTIC(MODEL, "AM2302"),
+                HOMEKIT_CHARACTERISTIC(FIRMWARE_REVISION, "0.0.1"),
+                HOMEKIT_CHARACTERISTIC(IDENTIFY, ac_identify), NULL}),
+          HOMEKIT_SERVICE(HUMIDITY_SENSOR, .primary = true,
                           .characteristics =
                             (homekit_characteristic_t *[]){
                               HOMEKIT_CHARACTERISTIC(NAME, "濕度"),
@@ -110,7 +131,7 @@ homekit_accessory_t *homekit_accessories[] = {
                               HOMEKIT_CHARACTERISTIC(ACTIVE, 1), NULL}),
           NULL}),
   HOMEKIT_ACCESSORY(
-      .id = 3, .category = homekit_accessory_category_fan,
+      .id = 4, .category = homekit_accessory_category_fan,
       .services =
         (homekit_service_t *[]){
           HOMEKIT_SERVICE(

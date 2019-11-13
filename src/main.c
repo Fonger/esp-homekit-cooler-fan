@@ -68,7 +68,7 @@ void led_init() {
 
 void user_init(void) {
   uart_set_baud(0, 115200);
-
+  gpio_set_pullup(14, false, false);
   sysparam_set_string("hostname", "Fonger-Homekit");
   wifi_init();
   homekit_server_init(&homekit_config);

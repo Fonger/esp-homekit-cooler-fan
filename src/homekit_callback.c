@@ -173,14 +173,14 @@ static const ssd1306_t dev = {.protocol = PROTOCOL,
 
 /* Local frame buffer */
 static uint8_t buffer[DISPLAY_WIDTH * DISPLAY_HEIGHT / 8];
-
+bool dht_success = false;
 void temperature_sensor_task(void *_args) {
   gpio_set_pullup(TEMPERATURE_SENSOR_GPIO, false, false);
   float humidity_value, temperature_value;
   while (1) {
-    bool success = dht_read_float_data(DHT_TYPE_DHT22, TEMPERATURE_SENSOR_GPIO,
-                                       &humidity_value, &temperature_value);
-    if (success) {
+    dht_success = dht_read_float_data(DHT_TYPE_DHT22, TEMPERATURE_SENSOR_GPIO,
+                                      &humidity_value, &temperature_value);
+    if (dht_success) {
       printf("[DHT22] temperature %g°C, humidity %g%%\n", temperature_value,
              humidity_value);
       current_temperature.value = HOMEKIT_FLOAT(temperature_value);
@@ -245,18 +245,27 @@ void update_display_task(void *_args) {
     vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
   ssd1306_set_whole_display_lighting(&dev, false);
+  ssd1306_set_contrast(&dev, 0);
+  ssd1306_set_precharge_period(&dev, 0);
+  ssd1306_set_deseltct_lvl(&dev, 0);
 
   while (1) {
 
-    ssd1306_fill_rectangle(&dev, buffer, 0, 0, DISPLAY_WIDTH,
-                           DISPLAY_HEIGHT / 2, OLED_COLOR_BLACK);
+    ssd1306_fill_rectangle(&dev, buffer, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT,
+                           OLED_COLOR_BLACK);
 
-    sprintf(text, "Temperature %0.1f C", current_temperature.value.float_value);
-    ssd1306_draw_string(&dev, buffer, font, 0, 0, text, OLED_COLOR_WHITE,
-                        OLED_COLOR_BLACK);
-    sprintf(text, "Humidity    %0.1f %%", current_humidity.value.float_value);
-    ssd1306_draw_string(&dev, buffer, font, 0, 12, text, OLED_COLOR_WHITE,
-                        OLED_COLOR_BLACK);
+    if (dht_success) {
+      sprintf(text, "Temperature %0.1f C",
+              current_temperature.value.float_value);
+      ssd1306_draw_string(&dev, buffer, font, 0, 0, text, OLED_COLOR_WHITE,
+                          OLED_COLOR_BLACK);
+      sprintf(text, "Humidity    %0.1f %%", current_humidity.value.float_value);
+      ssd1306_draw_string(&dev, buffer, font, 0, 12, text, OLED_COLOR_WHITE,
+                          OLED_COLOR_BLACK);
+    } else {
+      ssd1306_draw_string(&dev, buffer, font, 0, 0, "DHT22 No Data",
+                          OLED_COLOR_WHITE, OLED_COLOR_BLACK);
+    }
 
     if (AC.active) {
       sprintf(text, "AC ON(%gC)", AC.targetTemperature);

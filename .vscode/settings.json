@@ -22,7 +22,9 @@
     "esp8266.h": "c",
     "stddef.h": "c",
     "portable.h": "c",
-    "dht.h": "c"
+    "dht.h": "c",
+    "system_error": "c",
+    "ios": "c"
   },
   "files.exclude": {
     "**/.git": true,
